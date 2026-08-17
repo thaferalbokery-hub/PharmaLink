@@ -1,0 +1,47 @@
+@model MedicineListViewModel
+
+<div class="card h-100 shadow-sm border-0">
+    @if (Model.PrimaryImageUrl != null)
+    {
+        <img src="@Model.PrimaryImageUrl" class="card-img-top" alt="@Model.CommercialName" style="height: 180px; object-fit: cover;" />
+    }
+    else
+    {
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+            <i class="fas fa-pills fa-3x text-success"></i>
+        </div>
+    }
+    <div class="card-body">
+        <h6 class="card-title fw-bold">@Model.CommercialName</h6>
+        <p class="card-text text-muted small mb-1">
+            <i class="fas fa-flask me-1"></i>@Model.ScientificName
+        </p>
+        <p class="card-text small">
+            <span class="badge bg-info">@Model.CategoryName</span>
+            @if (Model.RequiresPrescription)
+            {
+                <span class="badge bg-warning text-dark ms-1">
+                    <i class="fas fa-prescription me-1"></i>Rx
+                </span>
+            }
+        </p>
+        @if (Model.DosageForm != null)
+        {
+            <p class="card-text small text-muted">@Model.DosageForm @Model.Strength</p>
+        }
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            @if (Model.MinPrice.HasValue)
+            {
+                <small class="text-success fw-bold">@Model.MinPrice.Value.ToString("F2") SAR</small>
+            }
+            <small class="text-muted">
+                <i class="fas fa-store me-1"></i>@Model.PharmacyCount pharmacies
+            </small>
+        </div>
+    </div>
+    <div class="card-footer bg-white border-0">
+        <a asp-controller="Medicine" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-success btn-sm w-100">
+            <i class="fas fa-eye me-1"></i>View Details
+        </a>
+    </div>
+</div>

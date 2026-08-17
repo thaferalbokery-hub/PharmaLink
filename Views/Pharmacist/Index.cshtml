@@ -1,0 +1,147 @@
+@model PharmacistDashboardViewModel
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold"><i class="fas fa-clinic-medical me-2 text-success"></i>@Model.PharmacyName</h2>
+        <form asp-action="ToggleStatus" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn @(Model.IsOpen ? "btn-danger" : "btn-success") btn-lg">
+                <i class="fas @(Model.IsOpen ? "fa-door-closed" : "fa-door-open") me-2"></i>
+                @(Model.IsOpen ? "Close Pharmacy" : "Open Pharmacy")
+            </button>
+        </form>
+    </div>
+
+    <div class="mb-3">
+        @if (Model.IsOpen)
+        {
+            <span class="badge bg-success fs-6"><i class="fas fa-circle me-1"></i>Open Now</span>
+        }
+        else
+        {
+            <span class="badge bg-danger fs-6"><i class="fas fa-circle me-1"></i>Closed</span>
+        }
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm border-start border-4 border-primary">
+                <div class="card-body">
+                    <h5 class="text-primary fw-bold">@Model.TotalMedicines</h5>
+                    <small class="text-muted">Total Medicines</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm border-start border-4 border-success">
+                <div class="card-body">
+                    <h5 class="text-success fw-bold">@Model.AvailableMedicines</h5>
+                    <small class="text-muted">Available</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm border-start border-4 border-warning">
+                <div class="card-body">
+                    <h5 class="text-warning fw-bold">@Model.LowStockMedicines</h5>
+                    <small class="text-muted">Low Stock</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm border-start border-4 border-danger">
+                <div class="card-body">
+                    <h5 class="text-danger fw-bold">@Model.OutOfStockMedicines</h5>
+                    <small class="text-muted">Out of Stock</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-bold">Quick Actions</div>
+                <div class="card-body">
+                    <a asp-action="Inventory" class="btn btn-outline-primary me-2"><i class="fas fa-boxes me-1"></i>Manage Inventory</a>
+                    <a asp-action="AddInventory" class="btn btn-outline-success me-2"><i class="fas fa-plus me-1"></i>Add Medicine</a>
+                    <a asp-action="EditPharmacy" class="btn btn-outline-info me-2"><i class="fas fa-edit me-1"></i>Edit Pharmacy</a>
+                    <a asp-action="WorkingHours" class="btn btn-outline-warning me-2"><i class="fas fa-clock me-1"></i>Working Hours</a>
+                    <a asp-action="Reports" class="btn btn-outline-dark"><i class="fas fa-chart-bar me-1"></i>Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    @if (Model.LowStockItems.Any())
+    {
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark fw-bold">
+                <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Medicine</th><th>Quantity</th><th>Price</th><th>Action</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.LowStockItems.Take(5))
+                            {
+                                <tr>
+                                    <td>@item.MedicineName</td>
+                                    <td><span class="badge bg-warning text-dark">@item.Quantity</span></td>
+                                    <td>@item.Price.ToString("F2") SAR</td>
+                                    <td><a asp-action="UpdateInventory" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Update</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Recent Updates -->
+    @if (Model.RecentUpdates.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-history me-2 text-success"></i>Recent Updates
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Medicine</th><th>Qty</th><th>Price</th><th>Status</th><th>Updated</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.RecentUpdates)
+                            {
+                                <tr>
+                                    <td>@item.MedicineName</td>
+                                    <td>@item.Quantity</td>
+                                    <td>@item.Price.ToString("F2")</td>
+                                    <td>
+                                        @switch (item.AvailabilityStatus)
+                                        {
+                                            case AvailabilityStatus.Available:
+                                                <span class="badge bg-success">Available</span>
+                                                break;
+                                            case AvailabilityStatus.LowStock:
+                                                <span class="badge bg-warning text-dark">Low Stock</span>
+                                                break;
+                                            case AvailabilityStatus.OutOfStock:
+                                                <span class="badge bg-danger">Out of Stock</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>@item.LastUpdated.ToString("MMM dd, HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

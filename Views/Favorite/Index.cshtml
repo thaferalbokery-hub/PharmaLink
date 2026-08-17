@@ -1,0 +1,69 @@
+@{
+    var favoritePharmacies = ViewBag.FavoritePharmacies as List<Pharmacy> ?? new List<Pharmacy>();
+    var favoriteMedicines = ViewBag.FavoriteMedicines as List<Medicine> ?? new List<Medicine>();
+}
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4"><i class="fas fa-heart me-2 text-danger"></i>My Favorites</h2>
+
+    <!-- Favorite Pharmacies -->
+    <h4 class="fw-bold mt-4 mb-3"><i class="fas fa-store me-2 text-success"></i>Favorite Pharmacies</h4>
+    @if (favoritePharmacies.Any())
+    {
+        <div class="row g-3 mb-4">
+            @foreach (var pharmacy in favoritePharmacies)
+            {
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="fw-bold">@pharmacy.Name</h6>
+                            <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt me-1"></i>@pharmacy.Address, @pharmacy.City</p>
+                            @if (pharmacy.IsOpen)
+                            {
+                                <span class="badge bg-success">Open Now</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Closed</span>
+                            }
+                            <div class="mt-2">
+                                <a asp-controller="Pharmacy" asp-action="Details" asp-route-id="@pharmacy.Id" class="btn btn-sm btn-outline-success">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-4">No favorite pharmacies yet.</p>
+    }
+
+    <!-- Favorite Medicines -->
+    <h4 class="fw-bold mt-4 mb-3"><i class="fas fa-pills me-2 text-success"></i>Favorite Medicines</h4>
+    @if (favoriteMedicines.Any())
+    {
+        <div class="row g-3">
+            @foreach (var medicine in favoriteMedicines)
+            {
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="fw-bold">@medicine.CommercialName</h6>
+                            <p class="text-muted small mb-1"><i class="fas fa-flask me-1"></i>@medicine.ScientificName</p>
+                            <span class="badge bg-info">@medicine.Category?.Name</span>
+                            <div class="mt-2">
+                                <a asp-controller="Medicine" asp-action="Details" asp-route-id="@medicine.Id" class="btn btn-sm btn-outline-success">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">No favorite medicines yet.</p>
+    }
+</div>

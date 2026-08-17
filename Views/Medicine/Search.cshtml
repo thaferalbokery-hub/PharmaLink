@@ -1,0 +1,60 @@
+@model MedicineSearchViewModel
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4"><i class="fas fa-search me-2 text-success"></i>Search Medicines</h2>
+
+    <!-- Search Form -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Search" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="q" value="@Model.SearchTerm" class="form-control" placeholder="Search by name..." />
+                </div>
+                <div class="col-md-3">
+                    <select name="categoryId" class="form-select">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <option value="@cat.Id" selected="@(Model.CategoryId == cat.Id)">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="brandId" class="form-select">
+                        <option value="">All Brands</option>
+                        @foreach (var brand in Model.Brands)
+                        {
+                            <option value="@brand.Id" selected="@(Model.BrandId == brand.Id)">@brand.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100"><i class="fas fa-search me-1"></i>Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    @if (ViewData["SearchResultCount"] != null)
+    {
+        <p class="text-muted mb-3">Found <strong>@ViewData["SearchResultCount"]</strong> results</p>
+    }
+
+    <div class="row g-4">
+        @foreach (var medicine in Model.Results)
+        {
+            <div class="col-md-3">
+                @await Html.PartialAsync("_MedicineCard", medicine)
+            </div>
+        }
+    </div>
+
+    @if (!Model.Results.Any() && !string.IsNullOrEmpty(Model.SearchTerm))
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No medicines found matching your search criteria.</p>
+        </div>
+    }
+</div>

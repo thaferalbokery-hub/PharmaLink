@@ -1,0 +1,75 @@
+@model PharmacyEditViewModel
+
+<div class="container py-4">
+    <h2 class="fw-bold mb-4"><i class="fas fa-edit me-2 text-success"></i>Edit Pharmacy</h2>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form asp-action="EditPharmacy" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Name" class="form-label">Pharmacy Name</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="City" class="form-label">City</label>
+                        <input asp-for="City" class="form-control" />
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Phone" class="form-label">Phone</label>
+                        <input asp-for="Phone" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label">Address</label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Latitude" class="form-label">Latitude</label>
+                        <input asp-for="Latitude" class="form-control" type="number" step="any" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Longitude" class="form-label">Longitude</label>
+                        <input asp-for="Longitude" class="form-control" type="number" step="any" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Pharmacy Image</label>
+                    <input asp-for="Image" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                    @if (Model.ImageUrl != null)
+                    {
+                        <small class="text-muted">Current: @Model.ImageUrl</small>
+                    }
+                </div>
+
+                <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
