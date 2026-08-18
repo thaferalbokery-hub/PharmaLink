@@ -11,10 +11,7 @@ public class SeedDataService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
 
-    public SeedDataService(
-        ApplicationDbContext context,
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
+    public SeedDataService(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         _context = context;
         _userManager = userManager;
@@ -24,15 +21,15 @@ public class SeedDataService
     public async Task SeedAsync()
     {
         await _context.Database.MigrateAsync();
-
         await SeedRolesAsync();
         await SeedUsersAsync();
-        await SeedCategoriesAsync();
-        await SeedBrandsAsync();
-        await SeedMedicinesAsync();
         await SeedPharmaciesAsync();
+        await SeedMedicinesAsync();
+        await SeedSuppliersAsync();
         await SeedInventoryAsync();
-        await SeedWorkingHoursAsync();
+        await SeedSupplierMedicinesAsync();
+        await SeedPrescriptionsAsync();
+        await SeedSalesAsync();
     }
 
     private async Task SeedRolesAsync()
@@ -41,165 +38,32 @@ public class SeedDataService
         foreach (var role in roles)
         {
             if (!await _roleManager.RoleExistsAsync(role))
-            {
                 await _roleManager.CreateAsync(new IdentityRole(role));
-            }
         }
     }
 
     private async Task SeedUsersAsync()
     {
-        // Admin
         if (await _userManager.FindByEmailAsync("admin@pharmalink.com") == null)
         {
-            var admin = new ApplicationUser
-            {
-                UserName = "admin@pharmalink.com",
-                Email = "admin@pharmalink.com",
-                FirstName = "System",
-                LastName = "Admin",
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var result = await _userManager.CreateAsync(admin, "Admin@123");
-            if (result.Succeeded)
-                await _userManager.AddToRoleAsync(admin, "Admin");
+            var admin = new ApplicationUser { UserName = "admin@pharmalink.com", Email = "admin@pharmalink.com", FirstName = "System", LastName = "Admin", EmailConfirmed = true, IsActive = true };
+            await _userManager.CreateAsync(admin, "Admin@123");
+            await _userManager.AddToRoleAsync(admin, "Admin");
         }
 
-        // Pharmacist
         if (await _userManager.FindByEmailAsync("pharmacist@pharmalink.com") == null)
         {
-            var pharmacist = new ApplicationUser
-            {
-                UserName = "pharmacist@pharmalink.com",
-                Email = "pharmacist@pharmalink.com",
-                FirstName = "Ahmed",
-                LastName = "Al-Pharmacy",
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var result = await _userManager.CreateAsync(pharmacist, "Pharm@123");
-            if (result.Succeeded)
-                await _userManager.AddToRoleAsync(pharmacist, "Pharmacist");
+            var pharmacist = new ApplicationUser { UserName = "pharmacist@pharmalink.com", Email = "pharmacist@pharmalink.com", FirstName = "Ahmed", LastName = "Pharmacist", EmailConfirmed = true, IsActive = true };
+            await _userManager.CreateAsync(pharmacist, "Pharm@123");
+            await _userManager.AddToRoleAsync(pharmacist, "Pharmacist");
         }
 
-        // Second Pharmacist
-        if (await _userManager.FindByEmailAsync("pharmacist2@pharmalink.com") == null)
-        {
-            var pharmacist2 = new ApplicationUser
-            {
-                UserName = "pharmacist2@pharmalink.com",
-                Email = "pharmacist2@pharmalink.com",
-                FirstName = "Sara",
-                LastName = "Al-Dawaa",
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var result = await _userManager.CreateAsync(pharmacist2, "Pharm@123");
-            if (result.Succeeded)
-                await _userManager.AddToRoleAsync(pharmacist2, "Pharmacist");
-        }
-
-        // Customer
         if (await _userManager.FindByEmailAsync("customer@pharmalink.com") == null)
         {
-            var customer = new ApplicationUser
-            {
-                UserName = "customer@pharmalink.com",
-                Email = "customer@pharmalink.com",
-                FirstName = "Mohammed",
-                LastName = "Customer",
-                EmailConfirmed = true,
-                IsActive = true
-            };
-            var result = await _userManager.CreateAsync(customer, "Cust@123");
-            if (result.Succeeded)
-                await _userManager.AddToRoleAsync(customer, "Customer");
+            var customer = new ApplicationUser { UserName = "customer@pharmalink.com", Email = "customer@pharmalink.com", FirstName = "Mohammed", LastName = "Customer", EmailConfirmed = true, IsActive = true };
+            await _userManager.CreateAsync(customer, "Cust@123");
+            await _userManager.AddToRoleAsync(customer, "Customer");
         }
-    }
-
-    private async Task SeedCategoriesAsync()
-    {
-        if (await _context.MedicineCategories.AnyAsync()) return;
-
-        var categories = new List<MedicineCategory>
-        {
-            new() { Name = "Pain Relief", Description = "Medications for pain management" },
-            new() { Name = "Vitamins & Supplements", Description = "Vitamins, minerals, and dietary supplements" },
-            new() { Name = "Medical Supplies", Description = "Medical devices and supplies" },
-            new() { Name = "First Aid", Description = "First aid supplies and medications" },
-            new() { Name = "Personal Care", Description = "Personal hygiene and care products" },
-            new() { Name = "Baby Care", Description = "Baby health and care products" },
-            new() { Name = "Hygiene", Description = "Hygiene and sanitation products" },
-            new() { Name = "Antibiotics", Description = "Antibiotic medications" },
-            new() { Name = "Cardiovascular", Description = "Heart and blood pressure medications" },
-            new() { Name = "Diabetes", Description = "Diabetes management medications" },
-            new() { Name = "Respiratory", Description = "Respiratory and allergy medications" },
-            new() { Name = "Digestive", Description = "Digestive system medications" }
-        };
-
-        _context.MedicineCategories.AddRange(categories);
-        await _context.SaveChangesAsync();
-    }
-
-    private async Task SeedBrandsAsync()
-    {
-        if (await _context.MedicineBrands.AnyAsync()) return;
-
-        var brands = new List<MedicineBrand>
-        {
-            new() { Name = "Pfizer", Description = "Global pharmaceutical company" },
-            new() { Name = "Novartis", Description = "Swiss multinational pharmaceutical company" },
-            new() { Name = "Roche", Description = "Swiss healthcare company" },
-            new() { Name = "Johnson & Johnson", Description = "American healthcare company" },
-            new() { Name = "Sanofi", Description = "French multinational pharmaceutical company" },
-            new() { Name = "GSK", Description = "British pharmaceutical company" },
-            new() { Name = "AstraZeneca", Description = "British-Swedish pharmaceutical company" },
-            new() { Name = "Bayer", Description = "German pharmaceutical company" },
-            new() { Name = "SPIMACO", Description = "Saudi pharmaceutical company" },
-            new() { Name = "Tabuk Pharmaceutical", Description = "Saudi pharmaceutical company" }
-        };
-
-        _context.MedicineBrands.AddRange(brands);
-        await _context.SaveChangesAsync();
-    }
-
-    private async Task SeedMedicinesAsync()
-    {
-        if (await _context.Medicines.AnyAsync()) return;
-
-        var painRelief = await _context.MedicineCategories.FirstAsync(c => c.Name == "Pain Relief");
-        var vitamins = await _context.MedicineCategories.FirstAsync(c => c.Name == "Vitamins & Supplements");
-        var antibiotics = await _context.MedicineCategories.FirstAsync(c => c.Name == "Antibiotics");
-        var cardiovascular = await _context.MedicineCategories.FirstAsync(c => c.Name == "Cardiovascular");
-        var diabetes = await _context.MedicineCategories.FirstAsync(c => c.Name == "Diabetes");
-        var respiratory = await _context.MedicineCategories.FirstAsync(c => c.Name == "Respiratory");
-        var digestive = await _context.MedicineCategories.FirstAsync(c => c.Name == "Digestive");
-
-        var pfizer = await _context.MedicineBrands.FirstAsync(b => b.Name == "Pfizer");
-        var novartis = await _context.MedicineBrands.FirstAsync(b => b.Name == "Novartis");
-        var gsk = await _context.MedicineBrands.FirstAsync(b => b.Name == "GSK");
-        var bayer = await _context.MedicineBrands.FirstAsync(b => b.Name == "Bayer");
-        var sanofi = await _context.MedicineBrands.FirstAsync(b => b.Name == "Sanofi");
-
-        var medicines = new List<Medicine>
-        {
-            new() { ScientificName = "Paracetamol", CommercialName = "Panadol", Description = "Used for pain relief and fever reduction", CategoryId = painRelief.Id, BrandId = gsk.Id, DosageForm = "Tablet", Strength = "500mg", Unit = "mg" },
-            new() { ScientificName = "Ibuprofen", CommercialName = "Advil", Description = "Non-steroidal anti-inflammatory drug for pain and inflammation", CategoryId = painRelief.Id, BrandId = pfizer.Id, DosageForm = "Tablet", Strength = "400mg", Unit = "mg" },
-            new() { ScientificName = "Amoxicillin", CommercialName = "Amoxil", Description = "Broad-spectrum antibiotic", CategoryId = antibiotics.Id, BrandId = gsk.Id, DosageForm = "Capsule", Strength = "500mg", Unit = "mg", RequiresPrescription = true },
-            new() { ScientificName = "Metformin", CommercialName = "Glucophage", Description = "Oral diabetes medicine that helps control blood sugar levels", CategoryId = diabetes.Id, BrandId = sanofi.Id, DosageForm = "Tablet", Strength = "850mg", Unit = "mg", RequiresPrescription = true },
-            new() { ScientificName = "Amlodipine", CommercialName = "Norvasc", Description = "Calcium channel blocker for high blood pressure", CategoryId = cardiovascular.Id, BrandId = pfizer.Id, DosageForm = "Tablet", Strength = "5mg", Unit = "mg", RequiresPrescription = true },
-            new() { ScientificName = "Omeprazole", CommercialName = "Losec", Description = "Proton pump inhibitor for acid reflux", CategoryId = digestive.Id, BrandId = novartis.Id, DosageForm = "Capsule", Strength = "20mg", Unit = "mg" },
-            new() { ScientificName = "Cetirizine", CommercialName = "Zyrtec", Description = "Antihistamine for allergy relief", CategoryId = respiratory.Id, BrandId = pfizer.Id, DosageForm = "Tablet", Strength = "10mg", Unit = "mg" },
-            new() { ScientificName = "Vitamin D3", CommercialName = "Vi-De 3", Description = "Vitamin D supplement for bone health", CategoryId = vitamins.Id, BrandId = novartis.Id, DosageForm = "Drops", Strength = "4500IU", Unit = "IU/ml" },
-            new() { ScientificName = "Vitamin C", CommercialName = "Cevitil", Description = "Vitamin C supplement for immune support", CategoryId = vitamins.Id, BrandId = bayer.Id, DosageForm = "Effervescent Tablet", Strength = "1000mg", Unit = "mg" },
-            new() { ScientificName = "Aspirin", CommercialName = "Aspirin Protect", Description = "Blood thinner and pain reliever", CategoryId = cardiovascular.Id, BrandId = bayer.Id, DosageForm = "Tablet", Strength = "100mg", Unit = "mg" },
-            new() { ScientificName = "Salbutamol", CommercialName = "Ventolin", Description = "Bronchodilator for asthma relief", CategoryId = respiratory.Id, BrandId = gsk.Id, DosageForm = "Inhaler", Strength = "100mcg", Unit = "mcg", RequiresPrescription = true },
-            new() { ScientificName = "Diclofenac", CommercialName = "Voltaren", Description = "Anti-inflammatory for pain and swelling", CategoryId = painRelief.Id, BrandId = novartis.Id, DosageForm = "Gel", Strength = "1%", Unit = "%" }
-        };
-
-        _context.Medicines.AddRange(medicines);
-        await _context.SaveChangesAsync();
     }
 
     private async Task SeedPharmaciesAsync()
@@ -207,43 +71,52 @@ public class SeedDataService
         if (await _context.Pharmacies.AnyAsync()) return;
 
         var pharmacist = await _userManager.FindByEmailAsync("pharmacist@pharmalink.com");
-        var pharmacist2 = await _userManager.FindByEmailAsync("pharmacist2@pharmalink.com");
-
-        if (pharmacist == null || pharmacist2 == null) return;
 
         var pharmacies = new List<Pharmacy>
         {
-            new()
-            {
-                Name = "Al-Dawaa Pharmacy",
-                Description = "Leading pharmacy chain providing quality healthcare products and services",
-                Phone = "+966501234567",
-                Email = "aldawaa@pharmalink.com",
-                Address = "King Fahd Road, Al-Olaya District",
-                City = "Riyadh",
-                Latitude = 24.7136,
-                Longitude = 46.6753,
-                IsOpen = true,
-                IsActive = true,
-                OwnerId = pharmacist.Id
-            },
-            new()
-            {
-                Name = "Al-Nahdi Pharmacy",
-                Description = "Trusted pharmacy with wide range of medicines and health products",
-                Phone = "+966509876543",
-                Email = "alnahdi@pharmalink.com",
-                Address = "Prince Sultan Road, Al-Zahra District",
-                City = "Jeddah",
-                Latitude = 21.5433,
-                Longitude = 39.1728,
-                IsOpen = true,
-                IsActive = true,
-                OwnerId = pharmacist2.Id
-            }
+            new() { Name = "Al-Dawaa Pharmacy", Description = "Leading pharmacy chain", Phone = "+966501234567", Email = "aldawaa@pharmalink.com", Address = "King Fahd Road", City = "Riyadh", IsOpen = true, OwnerId = pharmacist?.Id },
+            new() { Name = "Al-Nahdi Pharmacy", Description = "Trusted pharmacy", Phone = "+966509876543", Email = "alnahdi@pharmalink.com", Address = "Prince Sultan Road", City = "Jeddah", IsOpen = true },
+            new() { Name = "Care Pharmacy", Description = "Your health partner", Phone = "+966551112233", Email = "care@pharmalink.com", Address = "Olaya Street", City = "Riyadh", IsOpen = false }
         };
 
         _context.Pharmacies.AddRange(pharmacies);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedMedicinesAsync()
+    {
+        if (await _context.Medicines.AnyAsync()) return;
+
+        var medicines = new List<Medicine>
+        {
+            new() { Name = "Panadol 500mg", Description = "Pain relief and fever reduction", Category = "Pain Relief", Price = 12.50m, Quantity = 500, ExpiryDate = DateTime.UtcNow.AddYears(2) },
+            new() { Name = "Amoxicillin 500mg", Description = "Broad-spectrum antibiotic", Category = "Antibiotics", Price = 25.00m, Quantity = 200, RequiresPrescription = true, ExpiryDate = DateTime.UtcNow.AddYears(1) },
+            new() { Name = "Vitamin D3 1000IU", Description = "Vitamin D supplement", Category = "Vitamins", Price = 35.00m, Quantity = 300, ExpiryDate = DateTime.UtcNow.AddYears(3) },
+            new() { Name = "Metformin 850mg", Description = "Diabetes management", Category = "Diabetes", Price = 18.00m, Quantity = 150, RequiresPrescription = true, ExpiryDate = DateTime.UtcNow.AddMonths(18) },
+            new() { Name = "Omeprazole 20mg", Description = "Acid reflux treatment", Category = "Digestive", Price = 22.00m, Quantity = 250, ExpiryDate = DateTime.UtcNow.AddYears(2) },
+            new() { Name = "Cetirizine 10mg", Description = "Allergy relief", Category = "Allergy", Price = 15.00m, Quantity = 400, ExpiryDate = DateTime.UtcNow.AddYears(2) },
+            new() { Name = "Aspirin 100mg", Description = "Blood thinner", Category = "Cardiovascular", Price = 8.50m, Quantity = 600, ExpiryDate = DateTime.UtcNow.AddYears(3) },
+            new() { Name = "Ibuprofen 400mg", Description = "Anti-inflammatory", Category = "Pain Relief", Price = 14.00m, Quantity = 350, ExpiryDate = DateTime.UtcNow.AddYears(2) },
+            new() { Name = "Ventolin Inhaler", Description = "Asthma relief", Category = "Respiratory", Price = 45.00m, Quantity = 80, RequiresPrescription = true, ExpiryDate = DateTime.UtcNow.AddYears(1) },
+            new() { Name = "Vitamin C 1000mg", Description = "Immune support", Category = "Vitamins", Price = 20.00m, Quantity = 500, ExpiryDate = DateTime.UtcNow.AddYears(3) }
+        };
+
+        _context.Medicines.AddRange(medicines);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedSuppliersAsync()
+    {
+        if (await _context.Suppliers.AnyAsync()) return;
+
+        var suppliers = new List<Supplier>
+        {
+            new() { Name = "Pfizer Saudi", ContactPerson = "Ali Hassan", Phone = "+966501111111", Email = "pfizer@supplier.com", Address = "Industrial Area, Riyadh" },
+            new() { Name = "Novartis Gulf", ContactPerson = "Sara Ahmed", Phone = "+966502222222", Email = "novartis@supplier.com", Address = "Business District, Jeddah" },
+            new() { Name = "SPIMACO", ContactPerson = "Khalid Omar", Phone = "+966503333333", Email = "spimaco@supplier.com", Address = "Pharmaceutical Zone, Dammam" }
+        };
+
+        _context.Suppliers.AddRange(suppliers);
         await _context.SaveChangesAsync();
     }
 
@@ -253,62 +126,118 @@ public class SeedDataService
 
         var pharmacies = await _context.Pharmacies.ToListAsync();
         var medicines = await _context.Medicines.ToListAsync();
-
-        if (!pharmacies.Any() || !medicines.Any()) return;
-
         var random = new Random(42);
-        var inventories = new List<Inventory>();
 
         foreach (var pharmacy in pharmacies)
         {
-            foreach (var medicine in medicines)
+            foreach (var medicine in medicines.Take(7))
             {
-                var quantity = random.Next(0, 100);
-                var price = Math.Round((decimal)(random.NextDouble() * 50 + 5), 2);
-                var status = quantity == 0 ? AvailabilityStatus.OutOfStock
-                    : quantity <= 10 ? AvailabilityStatus.LowStock
-                    : AvailabilityStatus.Available;
-
-                inventories.Add(new Inventory
+                _context.Inventories.Add(new Inventory
                 {
                     PharmacyId = pharmacy.Id,
                     MedicineId = medicine.Id,
-                    Quantity = quantity,
-                    Price = price,
-                    AvailabilityStatus = status,
-                    LastUpdated = DateTime.UtcNow.AddDays(-random.Next(0, 30))
+                    Quantity = random.Next(0, 100),
+                    MinimumStockLevel = 10,
+                    LastUpdated = DateTime.UtcNow.AddDays(-random.Next(1, 30))
                 });
             }
         }
-
-        _context.Inventories.AddRange(inventories);
         await _context.SaveChangesAsync();
     }
 
-    private async Task SeedWorkingHoursAsync()
+    private async Task SeedSupplierMedicinesAsync()
     {
-        if (await _context.PharmacyWorkingHours.AnyAsync()) return;
+        if (await _context.SupplierMedicines.AnyAsync()) return;
 
-        var pharmacies = await _context.Pharmacies.ToListAsync();
-        var workingHours = new List<PharmacyWorkingHour>();
+        var suppliers = await _context.Suppliers.ToListAsync();
+        var medicines = await _context.Medicines.ToListAsync();
+        var random = new Random(42);
 
-        foreach (var pharmacy in pharmacies)
+        foreach (var supplier in suppliers)
         {
-            for (int day = 0; day < 7; day++)
+            foreach (var medicine in medicines.Take(5))
             {
-                var isFriday = (DayOfWeek)day == DayOfWeek.Friday;
-                workingHours.Add(new PharmacyWorkingHour
+                _context.SupplierMedicines.Add(new SupplierMedicine
                 {
-                    PharmacyId = pharmacy.Id,
-                    DayOfWeek = (DayOfWeek)day,
-                    OpeningTime = isFriday ? new TimeSpan(16, 0, 0) : new TimeSpan(8, 0, 0),
-                    ClosingTime = new TimeSpan(23, 0, 0),
-                    IsClosed = false
+                    SupplierId = supplier.Id,
+                    MedicineId = medicine.Id,
+                    SupplyPrice = medicine.Price * 0.7m,
+                    AvailableQuantity = random.Next(50, 500),
+                    LastSupplyDate = DateTime.UtcNow.AddDays(-random.Next(1, 60))
                 });
             }
         }
+        await _context.SaveChangesAsync();
+    }
 
-        _context.PharmacyWorkingHours.AddRange(workingHours);
+    private async Task SeedPrescriptionsAsync()
+    {
+        if (await _context.Prescriptions.AnyAsync()) return;
+
+        var customer = await _userManager.FindByEmailAsync("customer@pharmalink.com");
+        if (customer == null) return;
+
+        var medicines = await _context.Medicines.Where(m => m.RequiresPrescription).ToListAsync();
+
+        var prescription = new Prescription
+        {
+            UserId = customer.Id,
+            PrescriptionDate = DateTime.UtcNow.AddDays(-5),
+            Status = PrescriptionStatus.Approved,
+            DoctorName = "Dr. Ahmad",
+            Notes = "Take after meals"
+        };
+        _context.Prescriptions.Add(prescription);
+        await _context.SaveChangesAsync();
+
+        foreach (var med in medicines.Take(2))
+        {
+            _context.PrescriptionItems.Add(new PrescriptionItem
+            {
+                PrescriptionId = prescription.Id,
+                MedicineId = med.Id,
+                Quantity = 1,
+                DosageInstructions = "1 tablet twice daily"
+            });
+        }
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedSalesAsync()
+    {
+        if (await _context.Sales.AnyAsync()) return;
+
+        var customer = await _userManager.FindByEmailAsync("customer@pharmalink.com");
+        var pharmacy = await _context.Pharmacies.FirstOrDefaultAsync();
+        if (customer == null || pharmacy == null) return;
+
+        var medicines = await _context.Medicines.Take(3).ToListAsync();
+
+        var sale = new Sale
+        {
+            UserId = customer.Id,
+            PharmacyId = pharmacy.Id,
+            SaleDate = DateTime.UtcNow.AddDays(-2),
+            TotalAmount = 0,
+            Status = SaleStatus.Completed
+        };
+        _context.Sales.Add(sale);
+        await _context.SaveChangesAsync();
+
+        decimal total = 0;
+        foreach (var med in medicines)
+        {
+            var qty = 2;
+            _context.SaleItems.Add(new SaleItem
+            {
+                SaleId = sale.Id,
+                MedicineId = med.Id,
+                Quantity = qty,
+                UnitPrice = med.Price
+            });
+            total += med.Price * qty;
+        }
+        sale.TotalAmount = total;
         await _context.SaveChangesAsync();
     }
 }

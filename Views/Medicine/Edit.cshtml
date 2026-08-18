@@ -1,106 +1,28 @@
-@model MedicineEditViewModel
-
-<div class="container py-4">
-    <h2 class="fw-bold mb-4"><i class="fas fa-edit me-2 text-success"></i>Edit Medicine</h2>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-4">
-            <form asp-action="Edit" method="post" enctype="multipart/form-data">
-                <input type="hidden" asp-for="Id" />
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="ScientificName" class="form-label">Scientific Name</label>
-                        <input asp-for="ScientificName" class="form-control" />
-                        <span asp-validation-for="ScientificName" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="CommercialName" class="form-label">Commercial Name</label>
-                        <input asp-for="CommercialName" class="form-control" />
-                        <span asp-validation-for="CommercialName" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Description</label>
-                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="CategoryId" class="form-label">Category</label>
-                        <select asp-for="CategoryId" class="form-select">
-                            @foreach (var cat in Model.Categories)
-                            {
-                                <option value="@cat.Id">@cat.Name</option>
-                            }
-                        </select>
-                        <span asp-validation-for="CategoryId" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="BrandId" class="form-label">Brand</label>
-                        <select asp-for="BrandId" class="form-select">
-                            <option value="">-- No Brand --</option>
-                            @foreach (var brand in Model.Brands)
-                            {
-                                <option value="@brand.Id">@brand.Name</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="DosageForm" class="form-label">Dosage Form</label>
-                        <input asp-for="DosageForm" class="form-control" />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Strength" class="form-label">Strength</label>
-                        <input asp-for="Strength" class="form-control" />
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Unit" class="form-label">Unit</label>
-                        <input asp-for="Unit" class="form-control" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check">
-                            <input asp-for="RequiresPrescription" class="form-check-input" />
-                            <label asp-for="RequiresPrescription" class="form-check-label">Requires Prescription</label>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check">
-                            <input asp-for="IsActive" class="form-check-input" />
-                            <label asp-for="IsActive" class="form-check-label">Active</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Image" class="form-label">Medicine Image</label>
-                    <input asp-for="Image" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp" />
-                    @if (Model.ExistingImageUrl != null)
-                    {
-                        <div class="mt-2">
-                            <img src="@Model.ExistingImageUrl" alt="Current" style="max-height: 100px;" class="rounded" />
-                            <small class="d-block text-muted">Current image</small>
-                        </div>
-                    }
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Update Medicine</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                </div>
-            </form>
-        </div>
+@model Medicine
+<h2 class="fw-bold mb-4"><i class="fas fa-edit text-success me-2"></i>Edit Medicine</h2>
+<div class="card border-0 shadow-sm"><div class="card-body p-4">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div class="row">
+        <div class="col-md-6 mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+        <div class="col-md-6 mb-3"><label asp-for="Category" class="form-label"></label><input asp-for="Category" class="form-control" /><span asp-validation-for="Category" class="text-danger"></span></div>
     </div>
-</div>
-
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-}
+    <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="3"></textarea></div>
+    <div class="row">
+        <div class="col-md-4 mb-3"><label asp-for="Price" class="form-label"></label><input asp-for="Price" class="form-control" type="number" step="0.01" /><span asp-validation-for="Price" class="text-danger"></span></div>
+        <div class="col-md-4 mb-3"><label asp-for="Quantity" class="form-label"></label><input asp-for="Quantity" class="form-control" type="number" /><span asp-validation-for="Quantity" class="text-danger"></span></div>
+        <div class="col-md-4 mb-3"><label asp-for="ExpiryDate" class="form-label"></label><input asp-for="ExpiryDate" class="form-control" type="date" /></div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3 form-check ms-2"><input asp-for="RequiresPrescription" class="form-check-input" /><label asp-for="RequiresPrescription" class="form-check-label"></label></div>
+        <div class="col-md-6 mb-3 form-check"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label">Active</label></div>
+    </div>
+    <div class="mb-3"><label class="form-label">New Image (optional)</label><input name="imageFile" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+        @if (Model.ImageUrl != null) { <img src="@Model.ImageUrl" class="mt-2 rounded" style="max-height:80px;" /> }
+    </div>
+    <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Update</button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }

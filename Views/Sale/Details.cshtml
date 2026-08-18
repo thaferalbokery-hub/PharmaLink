@@ -1,0 +1,16 @@
+@model Sale
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Sales</a></li><li class="breadcrumb-item active">#@Model.Id</li></ol></nav>
+<h2 class="fw-bold">Sale #@Model.Id</h2>
+<table class="table table-sm mt-3" style="max-width:500px;">
+    <tr><th>Customer</th><td>@Model.User.FullName</td></tr>
+    <tr><th>Pharmacy</th><td>@Model.Pharmacy.Name</td></tr>
+    <tr><th>Date</th><td>@Model.SaleDate.ToString("MMM dd, yyyy")</td></tr>
+    <tr><th>Total</th><td class="fw-bold text-success">@Model.TotalAmount.ToString("C")</td></tr>
+    <tr><th>Status</th><td><span class="badge bg-info">@Model.Status</span></td></tr>
+</table>
+@if(Model.SaleItems.Any()){
+<h4 class="mt-4 fw-bold">Items</h4>
+<table class="table table-hover">
+    <thead class="table-light"><tr><th>Medicine</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+    <tbody>@foreach(var item in Model.SaleItems){<tr><td>@item.Medicine.Name</td><td>@item.Quantity</td><td>@item.UnitPrice.ToString("C")</td><td class="fw-bold">@item.Subtotal.ToString("C")</td></tr>}</tbody>
+</table>}

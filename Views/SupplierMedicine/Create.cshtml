@@ -1,0 +1,19 @@
+@model SupplierMedicine
+<h2 class="fw-bold mb-4"><i class="fas fa-plus-circle text-success me-2"></i>Link Supplier to Medicine</h2>
+<div class="card border-0 shadow-sm"><div class="card-body p-4">
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div class="row">
+        <div class="col-md-6 mb-3"><label asp-for="SupplierId" class="form-label"></label><select asp-for="SupplierId" class="form-select" asp-items="ViewBag.Suppliers"></select><span asp-validation-for="SupplierId" class="text-danger"></span></div>
+        <div class="col-md-6 mb-3"><label asp-for="MedicineId" class="form-label"></label><select asp-for="MedicineId" class="form-select" asp-items="ViewBag.Medicines"></select><span asp-validation-for="MedicineId" class="text-danger"></span></div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3"><label asp-for="SupplyPrice" class="form-label"></label><input asp-for="SupplyPrice" class="form-control" type="number" step="0.01" /><span asp-validation-for="SupplyPrice" class="text-danger"></span></div>
+        <div class="col-md-4 mb-3"><label asp-for="AvailableQuantity" class="form-label"></label><input asp-for="AvailableQuantity" class="form-control" type="number" /><span asp-validation-for="AvailableQuantity" class="text-danger"></span></div>
+        <div class="col-md-4 mb-3"><label asp-for="LastSupplyDate" class="form-label"></label><input asp-for="LastSupplyDate" class="form-control" type="date" /></div>
+    </div>
+    <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Create</button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }

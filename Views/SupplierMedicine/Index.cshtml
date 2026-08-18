@@ -1,0 +1,24 @@
+@model List<SupplierMedicine>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="fas fa-link text-success me-2"></i>Supplier-Medicine Links</h2>
+    <a asp-action="Create" class="btn btn-success"><i class="fas fa-plus me-1"></i>Add Link</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-success"><tr><th>Supplier</th><th>Medicine</th><th>Supply Price</th><th>Available Qty</th><th>Last Supply</th><th>Actions</th></tr></thead>
+        <tbody>
+            @foreach (var sm in Model)
+            {
+                <tr>
+                    <td>@sm.Supplier.Name</td><td>@sm.Medicine.Name</td>
+                    <td>@sm.SupplyPrice.ToString("C")</td><td>@sm.AvailableQuantity</td>
+                    <td>@(sm.LastSupplyDate?.ToString("MMM dd, yyyy") ?? "-")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@sm.Id" class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></a>
+                        <a asp-action="Delete" asp-route-id="@sm.Id" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

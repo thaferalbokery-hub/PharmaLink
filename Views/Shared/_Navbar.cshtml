@@ -12,83 +12,44 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Home" asp-action="Index">
-                        <i class="fas fa-home me-1"></i>Home
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Medicine" asp-action="Search">
-                        <i class="fas fa-search me-1"></i>Search Medicines
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Pharmacy" asp-action="Search">
-                        <i class="fas fa-store me-1"></i>Find Pharmacies
-                    </a>
-                </li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="fas fa-home me-1"></i>Home</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Medicine" asp-action="Index"><i class="fas fa-capsules me-1"></i>Medicines</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Pharmacy" asp-action="Index"><i class="fas fa-store me-1"></i>Pharmacies</a></li>
+                @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Admin") || User.IsInRole("Pharmacist")))
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="Supplier" asp-action="Index"><i class="fas fa-truck me-1"></i>Suppliers</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Inventory" asp-action="Index"><i class="fas fa-boxes-stacked me-1"></i>Inventory</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Sale" asp-action="Index"><i class="fas fa-cash-register me-1"></i>Sales</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="SupplierMedicine" asp-action="Index"><i class="fas fa-link me-1"></i>Supply</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Report" asp-action="Index"><i class="fas fa-chart-bar me-1"></i>Reports</a></li>
+                }
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="Prescription" asp-action="Index"><i class="fas fa-prescription me-1"></i>Prescriptions</a></li>
+                }
             </ul>
             <ul class="navbar-nav">
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    var user = await UserManager.GetUserAsync(User);
-                    var roles = await UserManager.GetRolesAsync(user!);
-
-                    @if (roles.Contains("Admin"))
+                    @if (User.IsInRole("Admin"))
                     {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Admin" asp-action="Index">
-                                <i class="fas fa-tachometer-alt me-1"></i>Admin Panel
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index"><i class="fas fa-tachometer-alt me-1"></i>Admin</a></li>
                     }
-                    @if (roles.Contains("Pharmacist"))
+                    @if (User.IsInRole("Pharmacist"))
                     {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Pharmacist" asp-action="Index">
-                                <i class="fas fa-clinic-medical me-1"></i>My Pharmacy
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Pharmacist" asp-action="Index"><i class="fas fa-user-md me-1"></i>Dashboard</a></li>
                     }
                     <li class="nav-item">
-                        <a class="nav-link" asp-controller="Favorite" asp-action="Index">
-                            <i class="fas fa-heart me-1"></i>Favorites
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Notification" asp-action="Index">
-                            <i class="fas fa-bell me-1"></i>Notifications
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-1"></i>@user!.FirstName
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fas fa-user-edit me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" asp-controller="SearchHistory" asp-action="Index"><i class="fas fa-history me-2"></i>Search History</a></li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
-                                <form asp-controller="Account" asp-action="Logout" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
-                                </form>
-                            </li>
-                        </ul>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button class="nav-link btn btn-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</button>
+                        </form>
                     </li>
                 }
                 else
                 {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Account" asp-action="Login">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light btn-sm ms-2 px-3" asp-controller="Account" asp-action="Register">
-                            Register
-                        </a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login"><i class="fas fa-sign-in-alt me-1"></i>Login</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Register">Register</a></li>
                 }
             </ul>
         </div>

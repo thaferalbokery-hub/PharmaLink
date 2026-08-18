@@ -1,57 +1,31 @@
 @model LoginViewModel
-
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow border-0">
-                <div class="card-body p-4">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-pills fa-3x text-success"></i>
-                        <h3 class="mt-2 fw-bold">Login to PharmaLink</h3>
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4"><i class="fas fa-sign-in-alt text-success"></i> Login</h3>
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-
-                    <form asp-action="Login" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">Email</label>
-                            <input asp-for="Email" class="form-control" placeholder="Enter your email" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label">Password</label>
-                            <input asp-for="Password" class="form-control" placeholder="Enter your password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input asp-for="RememberMe" class="form-check-input" />
-                            <label asp-for="RememberMe" class="form-check-label">Remember me</label>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100 mb-3">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
-                        </button>
-
-                        <div class="text-center">
-                            <p class="mb-0">Don't have an account? <a asp-action="Register" class="text-success">Register here</a></p>
-                        </div>
-                    </form>
-
-                    <hr />
-                    <div class="small text-muted">
-                        <p class="mb-1"><strong>Demo Accounts:</strong></p>
-                        <p class="mb-0">Admin: admin&#64;pharmalink.com / Admin&#64;123</p>
-                        <p class="mb-0">Pharmacist: pharmacist&#64;pharmalink.com / Pharm&#64;123</p>
-                        <p class="mb-0">Customer: customer&#64;pharmalink.com / Cust&#64;123</p>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
-                </div>
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Login</button>
+                    <p class="text-center mt-3"><a asp-action="Register">Create an account</a></p>
+                </form>
+                <hr /><small class="text-muted">Admin: admin&#64;pharmalink.com / Admin&#64;123<br/>Pharmacist: pharmacist&#64;pharmalink.com / Pharm&#64;123<br/>Customer: customer&#64;pharmalink.com / Cust&#64;123</small>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-}
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }

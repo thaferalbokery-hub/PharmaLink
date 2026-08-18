@@ -1,0 +1,23 @@
+@model Supplier
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Suppliers</a></li><li class="breadcrumb-item active">@Model.Name</li></ol></nav>
+<h2 class="fw-bold">@Model.Name</h2>
+<table class="table table-sm mt-3" style="max-width:500px;">
+    <tr><th>Contact Person</th><td>@Model.ContactPerson</td></tr>
+    <tr><th>Phone</th><td>@Model.Phone</td></tr>
+    <tr><th>Email</th><td>@Model.Email</td></tr>
+    <tr><th>Address</th><td>@Model.Address</td></tr>
+</table>
+@if (Model.SupplierMedicines.Any())
+{
+    <h4 class="mt-4 fw-bold">Supplied Medicines</h4>
+    <table class="table table-hover">
+        <thead class="table-light"><tr><th>Medicine</th><th>Supply Price</th><th>Available Qty</th><th>Last Supply</th></tr></thead>
+        <tbody>
+            @foreach (var sm in Model.SupplierMedicines)
+            {
+                <tr><td>@sm.Medicine.Name</td><td>@sm.SupplyPrice.ToString("C")</td><td>@sm.AvailableQuantity</td><td>@(sm.LastSupplyDate?.ToString("MMM dd, yyyy") ?? "-")</td></tr>
+            }
+        </tbody>
+    </table>
+}
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="fas fa-edit me-1"></i>Edit</a>

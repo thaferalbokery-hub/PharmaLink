@@ -1,0 +1,16 @@
+@model Prescription
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Prescriptions</a></li><li class="breadcrumb-item active">#@Model.Id</li></ol></nav>
+<h2 class="fw-bold">Prescription #@Model.Id</h2>
+<table class="table table-sm mt-3" style="max-width:500px;">
+    <tr><th>Patient</th><td>@Model.User.FullName</td></tr>
+    <tr><th>Doctor</th><td>@(Model.DoctorName ?? "-")</td></tr>
+    <tr><th>Date</th><td>@Model.PrescriptionDate.ToString("MMM dd, yyyy")</td></tr>
+    <tr><th>Status</th><td><span class="badge bg-info">@Model.Status</span></td></tr>
+    @if(Model.Notes != null){<tr><th>Notes</th><td>@Model.Notes</td></tr>}
+</table>
+@if(Model.PrescriptionItems.Any()){
+<h4 class="mt-4 fw-bold">Items</h4>
+<table class="table table-hover">
+    <thead class="table-light"><tr><th>Medicine</th><th>Quantity</th><th>Dosage</th></tr></thead>
+    <tbody>@foreach(var item in Model.PrescriptionItems){<tr><td>@item.Medicine.Name</td><td>@item.Quantity</td><td>@(item.DosageInstructions ?? "-")</td></tr>}</tbody>
+</table>}

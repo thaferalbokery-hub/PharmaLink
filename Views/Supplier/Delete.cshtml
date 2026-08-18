@@ -1,0 +1,11 @@
+@model Supplier
+<h2 class="fw-bold mb-4 text-danger"><i class="fas fa-trash me-2"></i>Delete Supplier</h2>
+<div class="card border-0 shadow-sm"><div class="card-body">
+    <h4>@Model.Name</h4><p>Contact: @Model.ContactPerson | Phone: @Model.Phone</p>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Confirm Delete</button>
+        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+</div></div>

@@ -1,0 +1,13 @@
+@model Inventory
+<h2 class="fw-bold mb-4 text-danger"><i class="fas fa-trash me-2"></i>Delete Inventory Item</h2>
+<div class="card border-0 shadow-sm"><div class="card-body">
+    <p><strong>Pharmacy:</strong> @Model.Pharmacy.Name</p>
+    <p><strong>Medicine:</strong> @Model.Medicine.Name</p>
+    <p><strong>Quantity:</strong> @Model.Quantity</p>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Confirm</button>
+        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+</div></div>

@@ -1,0 +1,19 @@
+@model Supplier
+<h2 class="fw-bold mb-4"><i class="fas fa-plus-circle text-success me-2"></i>Add Supplier</h2>
+<div class="card border-0 shadow-sm"><div class="card-body p-4">
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div class="row">
+        <div class="col-md-6 mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div>
+        <div class="col-md-6 mb-3"><label asp-for="ContactPerson" class="form-label"></label><input asp-for="ContactPerson" class="form-control" /><span asp-validation-for="ContactPerson" class="text-danger"></span></div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3"><label asp-for="Phone" class="form-label"></label><input asp-for="Phone" class="form-control" /><span asp-validation-for="Phone" class="text-danger"></span></div>
+        <div class="col-md-6 mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
+    </div>
+    <div class="mb-3"><label asp-for="Address" class="form-label"></label><textarea asp-for="Address" class="form-control" rows="2"></textarea></div>
+    <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Create</button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }

@@ -1,189 +1,123 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaLink.Data;
 using PharmaLink.Models;
 using PharmaLink.Services;
-using PharmaLink.ViewModels;
 
 namespace PharmaLink.Controllers;
 
 public class PharmacyController : Controller
 {
-    private readonly IPharmacyService _pharmacyService;
-    private readonly ISearchHistoryService _searchHistoryService;
-    private readonly IImageService _imageService;
-    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
+    private readonly IImageService _imageService;
 
-    public PharmacyController(
-        IPharmacyService pharmacyService,
-        ISearchHistoryService searchHistoryService,
-        IImageService imageService,
-        UserManager<ApplicationUser> userManager,
-        ApplicationDbContext context)
+    public PharmacyController(ApplicationDbContext context, IImageService imageService)
     {
-        _pharmacyService = pharmacyService;
-        _searchHistoryService = searchHistoryService;
-        _imageService = imageService;
-        _userManager = userManager;
         _context = context;
+        _imageService = imageService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? search, string? city)
     {
         ViewBag.Title = "Pharmacies";
-        var pharmacies = await _pharmacyService.GetAllPharmaciesAsync();
-        return View(pharmacies);
+        ViewBag.Cities = await _context.Pharmacies.Select(p => p.City).Distinct().OrderBy(c => c).ToListAsync();
+        ViewData["CurrentSearch"] = search;
+        ViewData["CurrentCity"] = city;
+
+        var query = _context.Pharmacies.Where(p => p.IsActive).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(p => p.Name.Contains(search) || p.Address.Contains(search));
+        if (!string.IsNullOrWhiteSpace(city))
+            query = query.Where(p => p.City == city);
+
+        return View(await query.OrderBy(p => p.Name).ToListAsync());
     }
 
     public async Task<IActionResult> Details(int id)
     {
-        var userId = _userManager.GetUserId(User);
-        var pharmacy = await _pharmacyService.GetPharmacyDetailsAsync(id, userId);
+        var pharmacy = await _context.Pharmacies
+            .Include(p => p.Inventories).ThenInclude(i => i.Medicine)
+            .Include(p => p.Sales)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (pharmacy == null) return NotFound();
-
         ViewBag.Title = pharmacy.Name;
         return View(pharmacy);
     }
 
-    public async Task<IActionResult> Search(string? q, string? city, bool? isOpen)
-    {
-        ViewBag.Title = "Search Pharmacies";
-
-        if (!string.IsNullOrWhiteSpace(q) && User.Identity?.IsAuthenticated == true)
-        {
-            var userId = _userManager.GetUserId(User);
-            if (userId != null)
-                await _searchHistoryService.RecordSearchAsync(userId, q, "Pharmacy");
-        }
-
-        var result = await _pharmacyService.SearchPharmaciesAsync(q, city, isOpen);
-        ViewData["SearchResultCount"] = result.Results.Count;
-        return View(result);
-    }
-
     [Authorize(Roles = "Admin")]
     [HttpGet]
-    public async Task<IActionResult> Create()
-    {
-        ViewBag.Title = "Add Pharmacy";
-        var pharmacists = await _userManager.GetUsersInRoleAsync("Pharmacist");
-        ViewBag.Pharmacists = pharmacists;
-        return View(new PharmacyCreateViewModel());
-    }
+    public IActionResult Create() => View();
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(PharmacyCreateViewModel model)
+    public async Task<IActionResult> Create(Pharmacy pharmacy, IFormFile? imageFile)
     {
-        if (!ModelState.IsValid)
-        {
-            var pharmacists = await _userManager.GetUsersInRoleAsync("Pharmacist");
-            ViewBag.Pharmacists = pharmacists;
-            return View(model);
-        }
-
-        await _pharmacyService.CreatePharmacyAsync(model);
+        if (!ModelState.IsValid) return View(pharmacy);
+        if (imageFile != null)
+            pharmacy.ImageUrl = await _imageService.UploadImageAsync(imageFile);
+        _context.Pharmacies.Add(pharmacy);
+        await _context.SaveChangesAsync();
         TempData["Success"] = "Pharmacy created successfully.";
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Pharmacist")]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        ViewBag.Title = "Edit Pharmacy";
-        var pharmacy = await _pharmacyService.GetPharmacyByIdAsync(id);
+        var pharmacy = await _context.Pharmacies.FindAsync(id);
         if (pharmacy == null) return NotFound();
-
-        var model = new PharmacyEditViewModel
-        {
-            Id = pharmacy.Id,
-            Name = pharmacy.Name,
-            Description = pharmacy.Description,
-            Phone = pharmacy.Phone,
-            Email = pharmacy.Email,
-            Address = pharmacy.Address,
-            City = pharmacy.City,
-            Latitude = pharmacy.Latitude,
-            Longitude = pharmacy.Longitude,
-            IsOpen = pharmacy.IsOpen,
-            IsActive = pharmacy.IsActive,
-            ImageUrl = pharmacy.ImageUrl
-        };
-
-        var pharmacists = await _userManager.GetUsersInRoleAsync("Pharmacist");
-        ViewBag.Pharmacists = pharmacists;
-        return View(model);
+        return View(pharmacy);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Pharmacist")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(PharmacyEditViewModel model)
+    public async Task<IActionResult> Edit(int id, Pharmacy pharmacy, IFormFile? imageFile)
     {
-        if (!ModelState.IsValid)
-        {
-            var pharmacists = await _userManager.GetUsersInRoleAsync("Pharmacist");
-            ViewBag.Pharmacists = pharmacists;
-            return View(model);
-        }
+        if (id != pharmacy.Id) return NotFound();
+        if (!ModelState.IsValid) return View(pharmacy);
 
-        if (model.Image != null)
-        {
-            var imageUrl = await _imageService.UploadImageAsync(model.Image);
-            if (imageUrl != null)
-            {
-                _imageService.DeleteImage(model.ImageUrl);
-                model.ImageUrl = imageUrl;
-            }
-        }
+        var existing = await _context.Pharmacies.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+        if (existing == null) return NotFound();
 
-        await _pharmacyService.UpdatePharmacyAsync(model);
+        if (imageFile != null)
+        {
+            _imageService.DeleteImage(existing.ImageUrl);
+            pharmacy.ImageUrl = await _imageService.UploadImageAsync(imageFile);
+        }
+        else pharmacy.ImageUrl = existing.ImageUrl;
+
+        pharmacy.CreatedAt = existing.CreatedAt;
+        pharmacy.OwnerId = existing.OwnerId;
+        _context.Update(pharmacy);
+        await _context.SaveChangesAsync();
         TempData["Success"] = "Pharmacy updated successfully.";
         return RedirectToAction("Index");
     }
 
     [Authorize(Roles = "Admin")]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
-        await _pharmacyService.DeletePharmacyAsync(id);
-        TempData["Success"] = "Pharmacy deleted successfully.";
-        return RedirectToAction("Index");
+        var pharmacy = await _context.Pharmacies.FindAsync(id);
+        if (pharmacy == null) return NotFound();
+        return View(pharmacy);
     }
 
-    [Authorize]
-    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleFavorite(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null) return RedirectToAction("Login", "Account");
-
-        var existing = await _context.FavoritePharmacies
-            .FirstOrDefaultAsync(f => f.UserId == userId && f.PharmacyId == id);
-
-        if (existing != null)
-        {
-            _context.FavoritePharmacies.Remove(existing);
-            TempData["Success"] = "Removed from favorites.";
-        }
-        else
-        {
-            _context.FavoritePharmacies.Add(new FavoritePharmacy
-            {
-                UserId = userId,
-                PharmacyId = id
-            });
-            TempData["Success"] = "Added to favorites.";
-        }
-
+        var pharmacy = await _context.Pharmacies.FindAsync(id);
+        if (pharmacy == null) return NotFound();
+        _imageService.DeleteImage(pharmacy.ImageUrl);
+        _context.Pharmacies.Remove(pharmacy);
         await _context.SaveChangesAsync();
-        return RedirectToAction("Details", new { id });
+        TempData["Success"] = "Pharmacy deleted.";
+        return RedirectToAction("Index");
     }
 }

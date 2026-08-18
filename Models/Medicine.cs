@@ -8,33 +8,35 @@ public class Medicine
     [Key]
     public int Id { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Medicine name is required")]
     [StringLength(300)]
-    [Display(Name = "Scientific Name")]
-    public string ScientificName { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(300)]
-    [Display(Name = "Commercial Name")]
-    public string CommercialName { get; set; } = string.Empty;
+    [Display(Name = "Medicine Name")]
+    public string Name { get; set; } = string.Empty;
 
     [StringLength(2000)]
     public string? Description { get; set; }
 
-    [Required]
-    public int CategoryId { get; set; }
-
-    public int? BrandId { get; set; }
-
+    [Required(ErrorMessage = "Category is required")]
     [StringLength(100)]
-    [Display(Name = "Dosage Form")]
-    public string? DosageForm { get; set; }
+    public string Category { get; set; } = string.Empty;
 
-    [StringLength(50)]
-    public string? Strength { get; set; }
+    [Required]
+    [Range(0.01, 99999.99, ErrorMessage = "Price must be greater than 0")]
+    [Column(TypeName = "decimal(18,2)")]
+    [DataType(DataType.Currency)]
+    public decimal Price { get; set; }
 
-    [StringLength(50)]
-    public string? Unit { get; set; }
+    [Required]
+    [Range(0, int.MaxValue)]
+    public int Quantity { get; set; }
+
+    [DataType(DataType.Date)]
+    [Display(Name = "Expiry Date")]
+    public DateTime? ExpiryDate { get; set; }
+
+    [StringLength(255)]
+    [Display(Name = "Image")]
+    public string? ImageUrl { get; set; }
 
     [Display(Name = "Requires Prescription")]
     public bool RequiresPrescription { get; set; } = false;
@@ -43,18 +45,9 @@ public class Medicine
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
     // Navigation Properties
-    [ForeignKey("CategoryId")]
-    public MedicineCategory Category { get; set; } = null!;
-
-    [ForeignKey("BrandId")]
-    public MedicineBrand? Brand { get; set; }
-
-    public ICollection<MedicineImage> Images { get; set; } = new List<MedicineImage>();
     public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
-    public ICollection<InventoryTransaction> Transactions { get; set; } = new List<InventoryTransaction>();
-    public ICollection<FavoriteMedicine> FavoritedBy { get; set; } = new List<FavoriteMedicine>();
-    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<PrescriptionItem> PrescriptionItems { get; set; } = new List<PrescriptionItem>();
+    public ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
+    public ICollection<SupplierMedicine> SupplierMedicines { get; set; } = new List<SupplierMedicine>();
 }

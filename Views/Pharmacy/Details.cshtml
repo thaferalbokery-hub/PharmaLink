@@ -1,206 +1,23 @@
-@model PharmacyDetailsViewModel
-
-<div class="container py-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-            <li class="breadcrumb-item"><a asp-controller="Pharmacy" asp-action="Index">Pharmacies</a></li>
-            <li class="breadcrumb-item active">@Model.Name</li>
-        </ol>
-    </nav>
-
-    <div class="row">
-        <div class="col-md-8">
-            <div class="d-flex align-items-center mb-3">
-                <h2 class="fw-bold me-3">@Model.Name</h2>
-                @if (Model.IsOpen)
-                {
-                    <span class="badge bg-success fs-6">Open Now</span>
-                }
-                else
-                {
-                    <span class="badge bg-danger fs-6">Closed</span>
-                }
-            </div>
-
-            @if (Model.Description != null)
-            {
-                <p class="text-muted">@Model.Description</p>
-            }
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <p><i class="fas fa-map-marker-alt text-success me-2"></i>@Model.Address, @Model.City</p>
-                    @if (Model.Phone != null)
-                    {
-                        <p><i class="fas fa-phone text-success me-2"></i>@Model.Phone</p>
-                    }
-                    @if (Model.Email != null)
-                    {
-                        <p><i class="fas fa-envelope text-success me-2"></i>@Model.Email</p>
-                    }
-                </div>
-                <div class="col-md-6">
-                    <p><i class="fas fa-pills text-success me-2"></i>@Model.AvailableMedicineCount medicines available</p>
-                    <p><i class="fas fa-star text-warning me-2"></i>@Model.AverageRating.ToString("F1") / 5 (@Model.ReviewCount reviews)</p>
-                </div>
-            </div>
-
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <form asp-controller="Pharmacy" asp-action="ToggleFavorite" asp-route-id="@Model.Id" method="post" class="mb-4">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="btn @(Model.IsFavorited ? "btn-danger" : "btn-outline-danger")">
-                        <i class="fas fa-heart me-2"></i>@(Model.IsFavorited ? "Remove from Favorites" : "Add to Favorites")
-                    </button>
-                </form>
-            }
-        </div>
-        <div class="col-md-4">
-            @if (Model.ImageUrl != null)
-            {
-                <img src="@Model.ImageUrl" class="img-fluid rounded shadow" alt="@Model.Name" />
-            }
-            else
-            {
-                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow" style="height: 200px;">
-                    <i class="fas fa-clinic-medical fa-4x text-success"></i>
-                </div>
-            }
-        </div>
+@model Pharmacy
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Pharmacies</a></li><li class="breadcrumb-item active">@Model.Name</li></ol></nav>
+<div class="row">
+    <div class="col-md-4">
+        @if (Model.ImageUrl != null) { <img src="@Model.ImageUrl" class="img-fluid rounded shadow" /> }
+        else { <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height:200px;"><i class="fas fa-store fa-4x text-success"></i></div> }
     </div>
-
-    <!-- Working Hours -->
-    @if (Model.WorkingHours.Any())
-    {
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-white fw-bold"><i class="fas fa-clock me-2 text-success"></i>Working Hours</div>
-            <div class="card-body">
-                <div class="row">
-                    @foreach (var wh in Model.WorkingHours)
-                    {
-                        <div class="col-md-3 mb-2">
-                            <strong>@wh.DayOfWeek:</strong>
-                            @if (wh.IsClosed)
-                            {
-                                <span class="text-danger">Closed</span>
-                            }
-                            else
-                            {
-                                <span>@wh.OpeningTime.ToString(@"hh\:mm") - @wh.ClosingTime.ToString(@"hh\:mm")</span>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Inventory -->
-    @if (Model.Inventory.Any())
-    {
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-white fw-bold"><i class="fas fa-pills me-2 text-success"></i>Available Medicines</div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr><th>Medicine</th><th>Category</th><th>Price (SAR)</th><th>Availability</th><th>Updated</th></tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.Inventory)
-                            {
-                                <tr>
-                                    <td>
-                                        <a asp-controller="Medicine" asp-action="Details" asp-route-id="@item.MedicineId" class="text-decoration-none">
-                                            <strong>@item.MedicineName</strong>
-                                        </a>
-                                        <br /><small class="text-muted">@item.MedicineScientificName</small>
-                                    </td>
-                                    <td><span class="badge bg-info">@item.CategoryName</span></td>
-                                    <td class="fw-bold">@item.Price.ToString("F2")</td>
-                                    <td>
-                                        @switch (item.AvailabilityStatus)
-                                        {
-                                            case AvailabilityStatus.Available:
-                                                <span class="badge bg-success">Available</span>
-                                                break;
-                                            case AvailabilityStatus.LowStock:
-                                                <span class="badge bg-warning text-dark">Low Stock</span>
-                                                break;
-                                            case AvailabilityStatus.OutOfStock:
-                                                <span class="badge bg-danger">Out of Stock</span>
-                                                break;
-                                        }
-                                    </td>
-                                    <td>@item.LastUpdated.ToString("MMM dd")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Reviews -->
-    <div class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-white fw-bold"><i class="fas fa-star me-2 text-warning"></i>Reviews</div>
-        <div class="card-body">
-            @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Customer"))
-            {
-                <form asp-controller="Review" asp-action="Create" method="post" class="mb-4">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="pharmacyId" value="@Model.Id" />
-                    <div class="row g-2">
-                        <div class="col-md-2">
-                            <select name="rating" class="form-select" required>
-                                <option value="">Rating</option>
-                                <option value="5">5 Stars</option>
-                                <option value="4">4 Stars</option>
-                                <option value="3">3 Stars</option>
-                                <option value="2">2 Stars</option>
-                                <option value="1">1 Star</option>
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <input type="text" name="comment" class="form-control" placeholder="Write your review..." />
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-success w-100">Submit</button>
-                        </div>
-                    </div>
-                </form>
-            }
-
-            @if (Model.Reviews.Any())
-            {
-                @foreach (var review in Model.Reviews)
-                {
-                    <div class="border-bottom pb-3 mb-3">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <strong>@review.UserName</strong>
-                                <span class="text-warning ms-2">
-                                    @for (int i = 0; i < review.Rating; i++)
-                                    {
-                                        <i class="fas fa-star"></i>
-                                    }
-                                </span>
-                            </div>
-                            <small class="text-muted">@review.CreatedAt.ToString("MMM dd, yyyy")</small>
-                        </div>
-                        @if (review.Comment != null)
-                        {
-                            <p class="mt-1 mb-0">@review.Comment</p>
-                        }
-                    </div>
-                }
-            }
-            else
-            {
-                <p class="text-muted">No reviews yet.</p>
-            }
-        </div>
+    <div class="col-md-8">
+        <h2 class="fw-bold">@Model.Name</h2>
+        @if (Model.IsOpen) { <span class="badge bg-success fs-6">Open</span> } else { <span class="badge bg-danger fs-6">Closed</span> }
+        <p class="mt-3">@Model.Description</p>
+        <table class="table table-sm">
+            <tr><th>Address</th><td>@Model.Address, @Model.City</td></tr>
+            @if (Model.Phone != null) { <tr><th>Phone</th><td>@Model.Phone</td></tr> }
+            @if (Model.Email != null) { <tr><th>Email</th><td>@Model.Email</td></tr> }
+        </table>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary me-2"><i class="fas fa-edit"></i> Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="fas fa-trash"></i> Delete</a>
+        }
     </div>
 </div>

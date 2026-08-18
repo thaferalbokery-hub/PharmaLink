@@ -1,0 +1,24 @@
+@model List<Inventory>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="fas fa-boxes-stacked text-success me-2"></i>Inventory</h2>
+    <a asp-action="Create" class="btn btn-success"><i class="fas fa-plus me-1"></i>Add</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-success"><tr><th>Pharmacy</th><th>Medicine</th><th>Quantity</th><th>Min Level</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+        <tbody>
+            @foreach (var i in Model)
+            {
+                <tr>
+                    <td>@i.Pharmacy.Name</td><td>@i.Medicine.Name</td><td>@i.Quantity</td><td>@i.MinimumStockLevel</td>
+                    <td>@if(i.IsLowStock){<span class="badge bg-warning text-dark">Low</span>}else{<span class="badge bg-success">OK</span>}</td>
+                    <td>@i.LastUpdated.ToString("MMM dd")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@i.Id" class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></a>
+                        <a asp-action="Delete" asp-route-id="@i.Id" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

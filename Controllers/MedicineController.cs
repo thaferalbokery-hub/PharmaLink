@@ -1,228 +1,137 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaLink.Data;
 using PharmaLink.Models;
 using PharmaLink.Services;
-using PharmaLink.ViewModels;
 
 namespace PharmaLink.Controllers;
 
 public class MedicineController : Controller
 {
-    private readonly IMedicineService _medicineService;
-    private readonly IImageService _imageService;
-    private readonly ISearchHistoryService _searchHistoryService;
-    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
+    private readonly IImageService _imageService;
 
-    public MedicineController(
-        IMedicineService medicineService,
-        IImageService imageService,
-        ISearchHistoryService searchHistoryService,
-        UserManager<ApplicationUser> userManager,
-        ApplicationDbContext context)
+    public MedicineController(ApplicationDbContext context, IImageService imageService)
     {
-        _medicineService = medicineService;
-        _imageService = imageService;
-        _searchHistoryService = searchHistoryService;
-        _userManager = userManager;
         _context = context;
+        _imageService = imageService;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? search, string? category)
     {
         ViewBag.Title = "Medicines";
-        var medicines = await _medicineService.GetAllMedicinesAsync();
+        ViewBag.Categories = await _context.Medicines.Select(m => m.Category).Distinct().OrderBy(c => c).ToListAsync();
+        ViewData["CurrentSearch"] = search;
+        ViewData["CurrentCategory"] = category;
+
+        var query = _context.Medicines.Where(m => m.IsActive).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(m => m.Name.Contains(search) || m.Description!.Contains(search));
+
+        if (!string.IsNullOrWhiteSpace(category))
+            query = query.Where(m => m.Category == category);
+
+        var medicines = await query.OrderBy(m => m.Name).ToListAsync();
         return View(medicines);
     }
 
     public async Task<IActionResult> Details(int id)
     {
-        var userId = _userManager.GetUserId(User);
-        var medicine = await _medicineService.GetMedicineDetailsAsync(id, userId);
-        if (medicine == null) return NotFound();
+        var medicine = await _context.Medicines
+            .Include(m => m.Inventories).ThenInclude(i => i.Pharmacy)
+            .Include(m => m.SupplierMedicines).ThenInclude(sm => sm.Supplier)
+            .FirstOrDefaultAsync(m => m.Id == id);
 
-        ViewBag.Title = medicine.CommercialName;
+        if (medicine == null) return NotFound();
+        ViewBag.Title = medicine.Name;
         return View(medicine);
     }
 
-    public async Task<IActionResult> Search(string? q, int? categoryId, int? brandId, AvailabilityStatus? availability)
-    {
-        ViewBag.Title = "Search Medicines";
-
-        if (!string.IsNullOrWhiteSpace(q) && User.Identity?.IsAuthenticated == true)
-        {
-            var userId = _userManager.GetUserId(User);
-            if (userId != null)
-                await _searchHistoryService.RecordSearchAsync(userId, q, "Medicine");
-        }
-
-        var result = await _medicineService.SearchMedicinesAsync(q, categoryId, brandId, availability);
-        ViewData["SearchResultCount"] = result.Results.Count;
-        return View(result);
-    }
-
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Pharmacist")]
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public IActionResult Create()
     {
         ViewBag.Title = "Add Medicine";
-        var model = new MedicineCreateViewModel
-        {
-            Categories = await _medicineService.GetAllCategoriesAsync(),
-            Brands = await _medicineService.GetAllBrandsAsync()
-        };
-        return View(model);
+        return View();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Pharmacist")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(MedicineCreateViewModel model)
+    public async Task<IActionResult> Create(Medicine medicine, IFormFile? imageFile)
     {
-        if (!ModelState.IsValid)
-        {
-            model.Categories = await _medicineService.GetAllCategoriesAsync();
-            model.Brands = await _medicineService.GetAllBrandsAsync();
-            return View(model);
-        }
+        if (!ModelState.IsValid) return View(medicine);
 
-        var medicine = await _medicineService.CreateMedicineAsync(model);
+        if (imageFile != null)
+            medicine.ImageUrl = await _imageService.UploadImageAsync(imageFile);
 
-        if (model.Image != null)
-        {
-            var imageUrl = await _imageService.UploadImageAsync(model.Image);
-            if (imageUrl != null)
-            {
-                var medicineImage = new MedicineImage
-                {
-                    MedicineId = medicine.Id,
-                    ImageUrl = imageUrl,
-                    IsPrimary = true
-                };
-                _context.MedicineImages.Add(medicineImage);
-                await _context.SaveChangesAsync();
-            }
-        }
-
+        _context.Medicines.Add(medicine);
+        await _context.SaveChangesAsync();
         TempData["Success"] = "Medicine created successfully.";
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Pharmacist")]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
-        ViewBag.Title = "Edit Medicine";
-        var medicine = await _medicineService.GetMedicineByIdAsync(id);
+        var medicine = await _context.Medicines.FindAsync(id);
         if (medicine == null) return NotFound();
-
-        var model = new MedicineEditViewModel
-        {
-            Id = medicine.Id,
-            ScientificName = medicine.ScientificName,
-            CommercialName = medicine.CommercialName,
-            Description = medicine.Description,
-            CategoryId = medicine.CategoryId,
-            BrandId = medicine.BrandId,
-            DosageForm = medicine.DosageForm,
-            Strength = medicine.Strength,
-            Unit = medicine.Unit,
-            RequiresPrescription = medicine.RequiresPrescription,
-            IsActive = medicine.IsActive,
-            ExistingImageUrl = medicine.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl
-                ?? medicine.Images.FirstOrDefault()?.ImageUrl,
-            Categories = await _medicineService.GetAllCategoriesAsync(),
-            Brands = await _medicineService.GetAllBrandsAsync()
-        };
-
-        return View(model);
+        ViewBag.Title = "Edit Medicine";
+        return View(medicine);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Pharmacist")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(MedicineEditViewModel model)
+    public async Task<IActionResult> Edit(int id, Medicine medicine, IFormFile? imageFile)
     {
-        if (!ModelState.IsValid)
+        if (id != medicine.Id) return NotFound();
+        if (!ModelState.IsValid) return View(medicine);
+
+        var existing = await _context.Medicines.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
+        if (existing == null) return NotFound();
+
+        if (imageFile != null)
         {
-            model.Categories = await _medicineService.GetAllCategoriesAsync();
-            model.Brands = await _medicineService.GetAllBrandsAsync();
-            return View(model);
+            _imageService.DeleteImage(existing.ImageUrl);
+            medicine.ImageUrl = await _imageService.UploadImageAsync(imageFile);
+        }
+        else
+        {
+            medicine.ImageUrl = existing.ImageUrl;
         }
 
-        await _medicineService.UpdateMedicineAsync(model);
-
-        if (model.Image != null)
-        {
-            var imageUrl = await _imageService.UploadImageAsync(model.Image);
-            if (imageUrl != null)
-            {
-                _imageService.DeleteImage(model.ExistingImageUrl);
-                var existingImage = await _context.MedicineImages
-                    .FirstOrDefaultAsync(i => i.MedicineId == model.Id && i.IsPrimary);
-
-                if (existingImage != null)
-                {
-                    existingImage.ImageUrl = imageUrl;
-                    existingImage.UploadedAt = DateTime.UtcNow;
-                }
-                else
-                {
-                    _context.MedicineImages.Add(new MedicineImage
-                    {
-                        MedicineId = model.Id,
-                        ImageUrl = imageUrl,
-                        IsPrimary = true
-                    });
-                }
-                await _context.SaveChangesAsync();
-            }
-        }
-
+        medicine.CreatedAt = existing.CreatedAt;
+        _context.Update(medicine);
+        await _context.SaveChangesAsync();
         TempData["Success"] = "Medicine updated successfully.";
         return RedirectToAction("Index");
     }
 
     [Authorize(Roles = "Admin")]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpGet]
     public async Task<IActionResult> Delete(int id)
     {
-        await _medicineService.DeleteMedicineAsync(id);
-        TempData["Success"] = "Medicine deleted successfully.";
-        return RedirectToAction("Index");
+        var medicine = await _context.Medicines.FindAsync(id);
+        if (medicine == null) return NotFound();
+        return View(medicine);
     }
 
-    [Authorize]
-    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ToggleFavorite(int id)
+    public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null) return RedirectToAction("Login", "Account");
+        var medicine = await _context.Medicines.FindAsync(id);
+        if (medicine == null) return NotFound();
 
-        var existing = await _context.FavoriteMedicines
-            .FirstOrDefaultAsync(f => f.UserId == userId && f.MedicineId == id);
-
-        if (existing != null)
-        {
-            _context.FavoriteMedicines.Remove(existing);
-            TempData["Success"] = "Removed from favorites.";
-        }
-        else
-        {
-            _context.FavoriteMedicines.Add(new FavoriteMedicine
-            {
-                UserId = userId,
-                MedicineId = id
-            });
-            TempData["Success"] = "Added to favorites.";
-        }
-
+        _imageService.DeleteImage(medicine.ImageUrl);
+        _context.Medicines.Remove(medicine);
         await _context.SaveChangesAsync();
-        return RedirectToAction("Details", new { id });
+        TempData["Success"] = "Medicine deleted successfully.";
+        return RedirectToAction("Index");
     }
 }
