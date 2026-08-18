@@ -1,16 +1,126 @@
 @model Prescription
 <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Prescriptions</a></li><li class="breadcrumb-item active">#@Model.Id</li></ol></nav>
-<h2 class="fw-bold">Prescription #@Model.Id</h2>
-<table class="table table-sm mt-3" style="max-width:500px;">
-    <tr><th>Patient</th><td>@Model.User.FullName</td></tr>
-    <tr><th>Doctor</th><td>@(Model.DoctorName ?? "-")</td></tr>
-    <tr><th>Date</th><td>@Model.PrescriptionDate.ToString("MMM dd, yyyy")</td></tr>
-    <tr><th>Status</th><td><span class="badge bg-info">@Model.Status</span></td></tr>
-    @if(Model.Notes != null){<tr><th>Notes</th><td>@Model.Notes</td></tr>}
-</table>
-@if(Model.PrescriptionItems.Any()){
-<h4 class="mt-4 fw-bold">Items</h4>
-<table class="table table-hover">
-    <thead class="table-light"><tr><th>Medicine</th><th>Quantity</th><th>Dosage</th></tr></thead>
-    <tbody>@foreach(var item in Model.PrescriptionItems){<tr><td>@item.Medicine.Name</td><td>@item.Quantity</td><td>@(item.DosageInstructions ?? "-")</td></tr>}</tbody>
-</table>}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold">Prescription #@Model.Id</h2>
+    <div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Pharmacist"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary me-1"><i class="fas fa-edit me-1"></i>Edit</a>
+        }
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="fas fa-trash me-1"></i>Delete</a>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+            <table class="table table-sm mb-0">
+                <tr><th style="width:35%">Patient</th><td>@Model.User.FullName</td></tr>
+                <tr><th>Doctor</th><td>@(Model.DoctorName ?? "Not specified")</td></tr>
+                <tr><th>Date</th><td>@Model.PrescriptionDate.ToString("MMMM dd, yyyy")</td></tr>
+                <tr><th>Status</th><td>
+                    @switch(Model.Status){
+                        case PrescriptionStatus.Pending: <span class="badge bg-warning text-dark fs-6">Pending</span> break;
+                        case PrescriptionStatus.Approved: <span class="badge bg-success fs-6">Approved</span> break;
+                        case PrescriptionStatus.Dispensed: <span class="badge bg-info fs-6">Dispensed</span> break;
+                        case PrescriptionStatus.Rejected: <span class="badge bg-danger fs-6">Rejected</span> break;
+                        default: <span class="badge bg-secondary fs-6">Cancelled</span> break;
+                    }
+                </td></tr>
+                @if(Model.Notes != null){<tr><th>Notes</th><td>@Model.Notes</td></tr>}
+            </table>
+        </div></div>
+    </div>
+    <div class="col-md-6">
+        @if (User.IsInRole("Admin") || User.IsInRole("Pharmacist"))
+        {
+            <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+                <h6 class="fw-bold mb-3">Update Status</h6>
+                <form asp-action="UpdateStatus" method="post" class="d-flex gap-2">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    @Html.AntiForgeryToken()
+                    <select name="status" class="form-select">
+                        @foreach(var s in Enum.GetValues<PrescriptionStatus>())
+                        {
+                            <option value="@((int)s)" selected="@(s == Model.Status)">@s</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i></button>
+                </form>
+            </div></div>
+        }
+    </div>
+</div>
+
+<!-- Prescription Items -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-pills me-2"></i>Prescribed Medicines</h5>
+    </div>
+    <div class="card-body">
+        @if(Model.PrescriptionItems.Any()){
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Medicine</th><th>Quantity</th><th>Dosage Instructions</th>
+                    @if(User.IsInRole("Admin") || User.IsInRole("Pharmacist")){<th>Actions</th>}
+                </tr></thead>
+                <tbody>
+                    @foreach(var item in Model.PrescriptionItems)
+                    {
+                        <tr>
+                            <td class="fw-bold">@item.Medicine.Name</td>
+                            <td>@item.Quantity</td>
+                            <td>@(item.DosageInstructions ?? "-")</td>
+                            @if(User.IsInRole("Admin") || User.IsInRole("Pharmacist"))
+                            {
+                                <td>
+                                    <form asp-action="RemoveItem" method="post" class="d-inline">
+                                        <input type="hidden" name="itemId" value="@item.Id" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this item?')"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }else{<p class="text-muted mb-0">No items in this prescription.</p>}
+    </div>
+</div>
+
+<!-- Add Item Form (Admin/Pharmacist only) -->
+@if (User.IsInRole("Admin") || User.IsInRole("Pharmacist"))
+{
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white"><h6 class="mb-0"><i class="fas fa-plus me-2"></i>Add Medicine to Prescription</h6></div>
+        <div class="card-body">
+            <form asp-action="AddItem" method="post" class="row g-2 align-items-end">
+                <input type="hidden" name="prescriptionId" value="@Model.Id" />
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <label class="form-label">Medicine</label>
+                    <select name="medicineId" class="form-select" required>
+                        <option value="">Select medicine...</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" name="quantity" class="form-control" min="1" value="1" required />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Dosage Instructions</label>
+                    <input type="text" name="dosageInstructions" class="form-control" placeholder="e.g., 1 tablet twice daily" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100"><i class="fas fa-plus me-1"></i>Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

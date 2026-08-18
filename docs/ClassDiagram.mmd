@@ -1,0 +1,114 @@
+classDiagram
+    class ApplicationUser {
+        +string Id
+        +string FirstName
+        +string LastName
+        +string Address
+        +string City
+        +DateTime CreatedAt
+        +bool IsActive
+        +int PharmacyId
+    }
+
+    class Pharmacy {
+        +int Id
+        +string Name
+        +string Description
+        +string Address
+        +string City
+        +string Phone
+        +string Email
+        +string ImageUrl
+        +bool IsActive
+        +bool IsOpen
+        +string OwnerId
+    }
+
+    class Medicine {
+        +int Id
+        +string Name
+        +string Description
+        +string Category
+        +decimal Price
+        +int Quantity
+        +DateTime ExpiryDate
+        +string ImageUrl
+        +bool RequiresPrescription
+        +bool IsActive
+    }
+
+    class Supplier {
+        +int Id
+        +string Name
+        +string ContactPerson
+        +string Phone
+        +string Email
+        +string Address
+        +bool IsActive
+    }
+
+    class Inventory {
+        +int Id
+        +int PharmacyId
+        +int MedicineId
+        +int Quantity
+        +int MinimumStockLevel
+        +DateTime LastUpdated
+    }
+
+    class Prescription {
+        +int Id
+        +string UserId
+        +DateTime PrescriptionDate
+        +PrescriptionStatus Status
+        +string Notes
+        +string DoctorName
+    }
+
+    class PrescriptionItem {
+        +int Id
+        +int PrescriptionId
+        +int MedicineId
+        +int Quantity
+        +string DosageInstructions
+    }
+
+    class Sale {
+        +int Id
+        +string UserId
+        +int PharmacyId
+        +DateTime SaleDate
+        +decimal TotalAmount
+        +SaleStatus Status
+        +string Notes
+    }
+
+    class SaleItem {
+        +int Id
+        +int SaleId
+        +int MedicineId
+        +int Quantity
+        +decimal UnitPrice
+    }
+
+    class SupplierMedicine {
+        +int Id
+        +int SupplierId
+        +int MedicineId
+        +decimal SupplyPrice
+        +int AvailableQuantity
+        +DateTime LastSupplyDate
+    }
+
+    ApplicationUser "1" -- "0..1" Pharmacy : owns
+    ApplicationUser "1" -- "*" Prescription : has
+    ApplicationUser "1" -- "*" Sale : has
+    Pharmacy "1" -- "*" Inventory : contains
+    Pharmacy "1" -- "*" Sale : processes
+    Medicine "1" -- "*" Inventory : stocked_in
+    Medicine "1" -- "*" PrescriptionItem : prescribed_in
+    Medicine "1" -- "*" SaleItem : sold_in
+    Prescription "1" -- "*" PrescriptionItem : contains
+    Sale "1" -- "*" SaleItem : contains
+    Supplier "1" -- "*" SupplierMedicine : supplies
+    Medicine "1" -- "*" SupplierMedicine : supplied_by

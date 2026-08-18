@@ -1,0 +1,40 @@
+@model Sale
+<h2 class="fw-bold mb-4"><i class="fas fa-edit text-success me-2"></i>Edit Sale #@Model.Id</h2>
+<div class="card border-0 shadow-sm"><div class="card-body p-4">
+<form asp-action="Edit" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                @foreach(var item in (IEnumerable<SelectListItem>)ViewBag.Statuses)
+                {
+                    <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Notes</label>
+            <input name="notes" value="@Model.Notes" class="form-control" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Update</button>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary ms-2">Cancel</a>
+</form>
+</div></div>
+
+@if(Model.SaleItems.Any())
+{
+    <h5 class="mt-4 fw-bold">Sale Items</h5>
+    <table class="table table-hover">
+        <thead class="table-light"><tr><th>Medicine</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+        <tbody>
+            @foreach(var item in Model.SaleItems)
+            {
+                <tr><td>@item.Medicine.Name</td><td>@item.Quantity</td><td>@item.UnitPrice.ToString("C")</td><td class="fw-bold">@item.Subtotal.ToString("C")</td></tr>
+            }
+            <tr class="table-success"><td colspan="3" class="fw-bold text-end">Total:</td><td class="fw-bold">@Model.TotalAmount.ToString("C")</td></tr>
+        </tbody>
+    </table>
+}

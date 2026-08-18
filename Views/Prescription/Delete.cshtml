@@ -1,0 +1,16 @@
+@model Prescription
+<h2 class="fw-bold mb-4 text-danger"><i class="fas fa-trash me-2"></i>Delete Prescription #@Model.Id</h2>
+<div class="card border-0 shadow-sm"><div class="card-body">
+    <p><strong>Patient:</strong> @Model.User.FullName</p>
+    <p><strong>Doctor:</strong> @(Model.DoctorName ?? "N/A")</p>
+    <p><strong>Date:</strong> @Model.PrescriptionDate.ToString("MMMM dd, yyyy")</p>
+    <p><strong>Status:</strong> <span class="badge bg-info">@Model.Status</span></p>
+    <p><strong>Items:</strong> @Model.PrescriptionItems.Count medicine(s)</p>
+    <div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone. All prescription items will also be deleted.</div>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash me-1"></i>Confirm Delete</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+</div></div>

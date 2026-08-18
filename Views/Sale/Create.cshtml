@@ -1,19 +1,72 @@
 @model Sale
 <h2 class="fw-bold mb-4"><i class="fas fa-plus-circle text-success me-2"></i>New Sale</h2>
 <div class="card border-0 shadow-sm"><div class="card-body p-4">
-<form asp-action="Create" method="post">
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<form asp-action="Create" method="post" id="saleForm">
+    @Html.AntiForgeryToken()
     <div class="row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="PharmacyId" class="form-label"></label>
-            <select asp-for="PharmacyId" class="form-select" asp-items="ViewBag.Pharmacies"></select>
-            <span asp-validation-for="PharmacyId" class="text-danger"></span>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Pharmacy <span class="text-danger">*</span></label>
+            <select name="pharmacyId" class="form-select" required>
+                <option value="">Select pharmacy...</option>
+                @foreach(var p in (IEnumerable<SelectListItem>)ViewBag.Pharmacies)
+                {
+                    <option value="@p.Value">@p.Text</option>
+                }
+            </select>
         </div>
-        <div class="col-md-6 mb-3"><label asp-for="SaleDate" class="form-label"></label><input asp-for="SaleDate" class="form-control" type="date" /></div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Customer <span class="text-danger">*</span></label>
+            <select name="userId" class="form-select" required>
+                <option value="">Select customer...</option>
+                @foreach(var c in (IList<ApplicationUser>)ViewBag.Customers)
+                {
+                    <option value="@c.Id">@c.FullName (@c.Email)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Notes</label>
+            <input name="notes" class="form-control" placeholder="Optional notes..." />
+        </div>
     </div>
-    <div class="mb-3"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" class="form-control" rows="2"></textarea></div>
-    <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Create Sale</button>
+
+    <h5 class="fw-bold mt-3 mb-3"><i class="fas fa-pills me-2"></i>Sale Items</h5>
+    <div id="saleItems">
+        <div class="row g-2 mb-2 sale-item">
+            <div class="col-md-6">
+                <select name="medicineIds" class="form-select" required>
+                    <option value="">Select medicine...</option>
+                    @foreach(var m in (List<Medicine>)ViewBag.Medicines)
+                    {
+                        <option value="@m.Id" data-price="@m.Price">@m.Name - @m.Price.ToString("C") (Stock: @m.Quantity)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="quantities" class="form-control" min="1" value="1" placeholder="Qty" required />
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-outline-danger btn-remove" onclick="this.closest('.sale-item').remove()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn btn-outline-success btn-sm mb-3" onclick="addSaleItem()"><i class="fas fa-plus me-1"></i>Add Another Item</button>
+
+    <hr/>
+    <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-cash-register me-1"></i>Complete Sale</button>
     <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
 </form>
 </div></div>
-@section Scripts { @await Html.PartialAsync("_ValidationScriptsPartial") }
+
+@section Scripts {
+<script>
+function addSaleItem() {
+    var container = document.getElementById('saleItems');
+    var firstItem = container.querySelector('.sale-item');
+    var clone = firstItem.cloneNode(true);
+    clone.querySelector('select').value = '';
+    clone.querySelector('input[type="number"]').value = '1';
+    container.appendChild(clone);
+}
+</script>
+}

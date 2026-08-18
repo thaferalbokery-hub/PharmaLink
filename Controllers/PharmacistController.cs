@@ -35,6 +35,16 @@ public class PharmacistController : Controller
 
         ViewBag.PendingPrescriptions = await _context.Prescriptions.CountAsync(p => p.Status == PrescriptionStatus.Pending);
         ViewBag.RecentSales = await _context.Sales.CountAsync(s => s.SaleDate >= DateTime.UtcNow.AddDays(-7));
+
+        // Prepare data for _DashboardCards partial view
+        ViewBag.DashboardCards = new List<dynamic>
+        {
+            new { Icon = "fas fa-clinic-medical", Color = "success", Value = ViewBag.PharmacyName ?? "No Pharmacy", Label = "My Pharmacy" },
+            new { Icon = "fas fa-boxes-stacked", Color = "info", Value = ViewBag.TotalInventory ?? 0, Label = "Inventory Items" },
+            new { Icon = "fas fa-exclamation-triangle", Color = "danger", Value = ViewBag.LowStock ?? 0, Label = "Low Stock" },
+            new { Icon = "fas fa-clock", Color = "warning", Value = ViewBag.PendingPrescriptions, Label = "Pending Rx" }
+        };
+
         return View();
     }
 }

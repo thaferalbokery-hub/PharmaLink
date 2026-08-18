@@ -1,0 +1,20 @@
+@* Reusable Dashboard Statistics Cards Partial View *@
+@* Usage: @await Html.PartialAsync("_DashboardCards", new ViewDataDictionary(ViewData) { { "Cards", cardsList } }) *@
+
+<div class="row g-3 mb-4">
+    @if (ViewBag.DashboardCards != null)
+    {
+        foreach (var card in (List<dynamic>)ViewBag.DashboardCards)
+        {
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="@card.Icon fa-2x mb-2 text-@card.Color"></i>
+                        <h3 class="fw-bold text-@card.Color">@card.Value</h3>
+                        <small class="text-muted">@card.Label</small>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

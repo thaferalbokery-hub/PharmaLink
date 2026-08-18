@@ -32,19 +32,33 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromHours(24);
+    options.SlidingExpiration = true;
 });
 
-// Register services
+// Register application services
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<SeedDataService>();
 
 var app = builder.Build();
 
-// Seed database
+// Apply pending migrations and seed database
 using (var scope = app.Services.CreateScope())
 {
-    var seedService = scope.ServiceProvider.GetRequiredService<SeedDataService>();
-    await seedService.SeedAsync();
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        await context.Database.MigrateAsync();
+
+        var seedService = services.GetRequiredService<SeedDataService>();
+        await seedService.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating/seeding the database.");
+    }
 }
 
 if (!app.Environment.IsDevelopment())

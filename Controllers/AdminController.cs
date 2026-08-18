@@ -30,6 +30,20 @@ public class AdminController : Controller
         ViewBag.TotalRevenue = await _context.Sales.Where(s => s.Status == SaleStatus.Completed).SumAsync(s => s.TotalAmount);
         ViewBag.LowStockCount = await _context.Inventories.CountAsync(i => i.Quantity <= i.MinimumStockLevel);
         ViewBag.PendingPrescriptions = await _context.Prescriptions.CountAsync(p => p.Status == PrescriptionStatus.Pending);
+
+        // Prepare data for _DashboardCards partial view
+        ViewBag.DashboardCards = new List<dynamic>
+        {
+            new { Icon = "fas fa-users", Color = "primary", Value = ViewBag.TotalUsers, Label = "Users" },
+            new { Icon = "fas fa-clinic-medical", Color = "success", Value = ViewBag.TotalPharmacies, Label = "Pharmacies" },
+            new { Icon = "fas fa-pills", Color = "info", Value = ViewBag.TotalMedicines, Label = "Medicines" },
+            new { Icon = "fas fa-truck", Color = "warning", Value = ViewBag.TotalSuppliers, Label = "Suppliers" },
+            new { Icon = "fas fa-cash-register", Color = "primary", Value = ViewBag.TotalSales, Label = "Total Sales" },
+            new { Icon = "fas fa-dollar-sign", Color = "success", Value = ((decimal)ViewBag.TotalRevenue).ToString("C"), Label = "Revenue" },
+            new { Icon = "fas fa-exclamation-triangle", Color = "danger", Value = ViewBag.LowStockCount, Label = "Low Stock" },
+            new { Icon = "fas fa-clock", Color = "warning", Value = ViewBag.PendingPrescriptions, Label = "Pending Rx" }
+        };
+
         return View();
     }
 
